@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:travel_picks/widgets/title_widget.dart';
+import 'package:travel_picks/widgets/country_list.dart';
+import 'package:travel_picks/widgets/new_widget_hide_btn.dart';
 
 void main() {
   runApp(const TravelApp());
@@ -13,11 +16,11 @@ class TravelApp extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(title: const Text("Travel Picks")),
         body: const TravelHomePage(),
-        bottomNavigationBar: BottomNavigationBar(
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-            BottomNavigationBarItem(icon: Icon(Icons.search), label: "Suche"),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profil"),
+        bottomNavigationBar: NavigationBar(
+          destinations: const <Widget>[
+            NavigationDestination(icon: Icon(Icons.home), label: "Home"),
+            NavigationDestination(icon: Icon(Icons.search), label: "Suche"),
+            NavigationDestination(icon: Icon(Icons.person), label: "Profil"),
           ],
         ),
       ),
@@ -35,6 +38,8 @@ class TravelHomePage extends StatefulWidget {
 
 class _TravelHomePageState extends State<TravelHomePage> {
   final List<String> _selectedCountries = [];
+  bool _euListVisible = true;
+  bool _saListVisible = true;
 
   void _addCountry(String countryName) {
     if (!_selectedCountries.contains(countryName)) {
@@ -42,6 +47,18 @@ class _TravelHomePageState extends State<TravelHomePage> {
         _selectedCountries.add(countryName);
       });
     }
+  }
+
+  void _toggleEUListVisibility() {
+    setState(() {
+      _euListVisible = !_euListVisible;
+    });
+  }
+
+  void _toggleSAListVisibility() {
+    setState(() {
+      _saListVisible = !_saListVisible;
+    });
   }
 
   static final List<Map<String, String>> europeCountries = [
@@ -78,45 +95,38 @@ class _TravelHomePageState extends State<TravelHomePage> {
               ),
             ),
           ),
-          SizedBox(height: 24),
-          const Text("Europa", style: TextStyle(fontSize: 18)),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 140,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: europeCountries
-                  .map(
-                    (country) => CountryCard(
-                      emoji: country["emoji"]!,
-                      name: country["name"]!,
-                      onTap: () => _addCountry(country["name"]!),
-                    ),
-                  )
-                  .toList(),
-            ),
+          Row(
+            children: [
+              TitleWidget(title: 'Europa'),
+              HideShowButton(
+                isVisible: _euListVisible,
+                onToggle: _toggleEUListVisibility,
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          const Text("Südamerika", style: TextStyle(fontSize: 18)),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 140,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: southAmericaCountries
-                  .map(
-                    (country) => CountryCard(
-                      emoji: country["emoji"]!,
-                      name: country["name"]!,
-                      onTap: () => _addCountry(country["name"]!),
-                    ),
-                  )
-                  .toList(),
+          if (_euListVisible) ...{
+            CountryList(
+              countryList: europeCountries,
+              onAddCountry: _addCountry,
             ),
+          },
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              TitleWidget(title: 'Südamerika'),
+              HideShowButton(
+                isVisible: _saListVisible,
+                onToggle: _toggleSAListVisibility,
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          const Text("Favoriten", style: TextStyle(fontSize: 18)),
-          const SizedBox(height: 8),
+          if (_saListVisible) ...{
+            CountryList(
+              countryList: southAmericaCountries,
+              onAddCountry: _addCountry,
+            ),
+          },
+          TitleWidget(title: 'Favoriten'),
           Wrap(
             spacing: 8,
             children: _selectedCountries
@@ -124,45 +134,6 @@ class _TravelHomePageState extends State<TravelHomePage> {
                 .toList(),
           ),
         ],
-      ),
-    );
-  }
-}
-
-//CountryCard
-class CountryCard extends StatelessWidget {
-  final String emoji;
-  final String name;
-  final VoidCallback? onTap;
-
-  const CountryCard({
-    super.key,
-    required this.emoji,
-    required this.name,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 120,
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        child: Card(
-          elevation: 4,
-          child: Padding(
-            padding: EdgeInsetsGeometry.symmetric(vertical: 16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(emoji, style: TextStyle(fontSize: 32)),
-                const SizedBox(height: 8),
-                Text(name),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
